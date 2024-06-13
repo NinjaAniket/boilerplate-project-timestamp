@@ -21,26 +21,45 @@ app.get("/", function (req, res) {
 
 // your first API endpoint... 
 app.get("/api/hello", function (req, res) {
-  res.json({greeting: 'hello APIss'});
+  res.json({greeting: 'hello APIsss'});
 });
 
-app.get('/api/:date', (req, res) => {
-  const dateParam = req.params.date;
-  let date;
+// app.get('/api/:date', (req, res) => {
+//   const dateParam = req.params.date;
+//   let date;
 
-  if (!isNaN(dateParam)) {
-    date = new Date(parseInt(dateParam));
-  } else {
-    date = new Date(dateParam);
-  }
+//   if (!isNaN(dateParam)) {
+//     date = new Date(parseInt(dateParam));
+//   } else {
+//     date = new Date(dateParam);
+//   }
 
-  if (isNaN(date.getTime())) {
-    res.json({ "error": "Invalid Date" });
-  } else {
-    res.json({
-      "unix": date.toUTCString(),
-    });
-  }
+//   if (isNaN(date.getTime())) {
+//     res.json({ "error": "Invalid Date" });
+//   } else {
+//     res.json({
+//       "unix": date.toUTCString(),
+//     });
+//   }
+// });
+app.set('trust proxy', true);
+
+
+app.get('/api/whoami', (req, res) => {
+  const ipaddress = req.ip;
+  const language = req.headers['accept-language'];
+  const software = req.headers['user-agent'];
+
+  let obj = {
+    ipaddress,
+    language,
+    software
+  };
+
+  res.json({obj})
+
+
+  
 });
 
 

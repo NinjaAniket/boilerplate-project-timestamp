@@ -6,6 +6,8 @@ var express = require('express');
 var app = express();
 const bodyParser = require("bodyParser");
 app.use(bodyParser());
+const mongoose = require("mongoose");
+
 
 // enable CORS (https://en.wikipedia.org/wiki/Cross-origin_resource_sharing)
 // so that your API is remotely testable by FCC 
@@ -116,7 +118,53 @@ app.get('/api/shorturl/:short_url', (req, res) => {
 
 })
 
+
+mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+const userSchema = new mongoose.Schema({
+  username: {type: String}
+})
+
+const exerciseSchema = new mongoose.Schema({
+  description: {type: String},
+  duration: {type: Number},
+  date: {type: Date, default: Date.now}
+})
+
+const User = mongoose.model('User', userSchema);
+const Exercise = mongoose.model('Exercise', exerciseSchema)
+
+
+app.post('/api/users', async(req, res, next) => {
+  const {username} = req.body;
+
+  const user = await User.create({
+    username
+  })
+  return res.json({username: user.username, _id: user._id})
+
+})
+
+app.get('/api/users', async(req, res) => {
+  const user = await User.find({}, 'username _id');
+  console.log(user, 'user')
+  return res.json(user)
+})
+
+app.post('/api/users/:_id/exercises', async (req, res) => {
+  const { description, duration, date} = req.body;
+  const exercise = await Exercise.create({
+     description, duration, date
+  })
+  console.log(exercise, 'exercise')
+  return res.json(exercise)
+
+})
+
+
 // Listen on port set in environment variable or default to 3000
 var listener = app.listen(process.env.PORT || 3000, function () {
   console.log('Your app is listening on port ' + listener.address().port);
 });
+
+
+

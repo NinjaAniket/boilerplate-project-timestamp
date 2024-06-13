@@ -75,9 +75,45 @@ app.get('/api/whoami', (req, res) => {
 });
 
 //api/shorturl
-app.post('/api/shorturl', (req, res, next) => {
-  const shorturl = req.body;
-  res.json({shorturl})
+
+app.post("/api/shorturl", (req,res) => {
+  const {url} = req.body;
+
+  //check url is valid
+
+  if(!url.includes("https://") && !url.includes("http://")) {
+    return res.json({error: "invalid url"})
+  }
+
+
+  const index = orignalUrl.indexOf(url);
+
+  if(index === -1) {
+    orignalUrl.push(url);
+    shortUrl.push(shortUrl.length);
+    return res.json({
+      orignal_url: url,
+      short_url: shortUrl.length - 1
+    })
+  }
+
+  return res.json({
+    orignal_url: url,
+    short_url: shortUrl[index]
+  })
+})
+
+app.get('/api/shorturl/:shorturl', (req, res) => {
+  const url = parseInt(req.params.shorturl);
+  const index = shortUrl.indexOf(url);
+  console.log(index, 'index');
+  if(index !== -1) {
+   return res.redirect(orignalUrl[index])
+  }
+  return res.json({
+    error: 'Request url not found'
+  })
+
 })
 
 // Listen on port set in environment variable or default to 3000

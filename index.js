@@ -35,6 +35,8 @@ app.get('/api/:date?', (req, res) => {
   let unixTimestamp;
   let utcTimestamp;
 
+  let isValidUnixNumber = /^[0-9]+$/.test(date)
+
   if(isDateValid) {
     unixTimestamp = new Date(date);
     utcTimestamp = unixTimestamp.toUTCString();
@@ -42,14 +44,14 @@ app.get('/api/:date?', (req, res) => {
   }else if(date == '' || date == null) {
     res.json({unix: new Date().valueOf(), utc: new Date().toUTCString()})
 }
+else if (isNaN(isDateValid) && isValidUnixNumber) {
+  unixTimestamp = new Date(parseInt(date));
+  utcTimestamp  = unixTimestamp.toUTCString();
+  return res.json({unix : unixTimestamp.valueOf(), utc : utcTimestamp});
+}
  else {
     res.json({error: "Invalid Date"})
   }
-
-
-  
-
-
 })
 
 app.set('trust proxy', true);

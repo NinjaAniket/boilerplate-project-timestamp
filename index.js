@@ -92,7 +92,7 @@ app.post("/api/shorturl", (req,res) => {
     orignalUrl.push(url);
     shortUrl.push(shortUrl.length);
     return res.json({
-      orignal_url: url,
+      original_url: url,
       short_url: shortUrl.length - 1
     })
   }

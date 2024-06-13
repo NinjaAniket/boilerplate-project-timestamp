@@ -104,7 +104,7 @@ app.post("/api/shorturl", (req,res) => {
 })
 
 app.get('/api/shorturl/:short_url', (req, res) => {
-  const url = parseInt(req.params.shorturl);
+  const url = parseInt(req.params.short_url);
   const index = shortUrl.indexOf(url);
   console.log(index, 'index');
   if(index !== -1) {

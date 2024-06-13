@@ -4,6 +4,8 @@
 // init project
 var express = require('express');
 var app = express();
+const bodyParser = require("bodyParser");
+app.use(bodyParser());
 
 // enable CORS (https://en.wikipedia.org/wiki/Cross-origin_resource_sharing)
 // so that your API is remotely testable by FCC 
@@ -24,24 +26,32 @@ app.get("/api/hello", function (req, res) {
   res.json({greeting: 'hello APIsss'});
 });
 
-// app.get('/api/:date', (req, res) => {
-//   const dateParam = req.params.date;
-//   let date;
+app.get('/api/:date?', (req, res) => {
+  let date = req.params.date;
+  //will return invalid if date is NaN
+  let isDateValid = Date.parse(date);
 
-//   if (!isNaN(dateParam)) {
-//     date = new Date(parseInt(dateParam));
-//   } else {
-//     date = new Date(dateParam);
-//   }
 
-//   if (isNaN(date.getTime())) {
-//     res.json({ "error": "Invalid Date" });
-//   } else {
-//     res.json({
-//       "unix": date.toUTCString(),
-//     });
-//   }
-// });
+  let unixTimestamp;
+  let utcTimestamp;
+
+  if(isDateValid) {
+    unixTimestamp = new Date(date);
+    utcTimestamp = unixTimestamp.toUTCString();
+    res.json({unix: unixTimestamp.valueOf(), utc: utcTimestamp})
+  }else if(date == '' || date == null) {
+    res.json({unix: new Date().valueOf(), utc: new Date().toUTCString()})
+}
+ else {
+    res.json({error: "Invalid Date"})
+  }
+
+
+  
+
+
+})
+
 app.set('trust proxy', true);
 
 
@@ -62,6 +72,11 @@ app.get('/api/whoami', (req, res) => {
   
 });
 
+//api/shorturl
+app.post('/api/shorturl', (req, res, next) => {
+  const shorturl = req.body;
+  res.json({shorturl})
+})
 
 // Listen on port set in environment variable or default to 3000
 var listener = app.listen(process.env.PORT || 3000, function () {

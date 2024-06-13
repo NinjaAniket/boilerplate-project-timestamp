@@ -26,33 +26,53 @@ app.get("/api/hello", function (req, res) {
   res.json({greeting: 'hello APIsss'});
 });
 
-app.get('/api/:date?', (req, res) => {
-  let date = req.params.date;
-  //will return invalid if date is NaN
-  let isDateValid = Date.parse(date);
+app.get("/api/:date?", (req,res) => {
+  let input = req.params.date;
 
+  /*1.create variable for checking :  
+      a.isValidDate 
+        to check if input is string with valid date format -> 
+        if not valid date, it will return NaN 
+        example : 
+        -valid   : 2015-12-25, 
+        -invalid : 2015-02-31, 1451001600000
+  */
+  let isValidDate       = Date.parse(input); 
 
-  let unixTimestamp;
-  let utcTimestamp;
+  /*  b.isValidUnixNumber
+        to check if input is string with whole number(no symbol or character in the middle of input) -> 
+        it must be valid unix (source : https://benjaminsemah.com/build-timestamp-microservice)
+  */
+  let isValidUnixNumber = /^[0-9]+$/.test(input)
 
-  let isValidUnixNumber = /^[0-9]+$/.test(date)
-
-  if(isDateValid) {
-    unixTimestamp = new Date(date);
-    utcTimestamp = unixTimestamp.toUTCString();
-    res.json({unix: unixTimestamp.valueOf(), utc: utcTimestamp})
-  }else if(date == '' || date == null) {
-    res.json({unix: new Date().valueOf(), utc: new Date().toUTCString()})
-}
-else if (isNaN(isDateValid) && isValidUnixNumber) {
-  unixTimestamp = new Date(parseInt(date));
-  utcTimestamp  = unixTimestamp.toUTCString();
-  return res.json({unix : unixTimestamp.valueOf(), utc : utcTimestamp});
-}
- else {
-    res.json({error: "Invalid Date"})
+  //  c.isEmpty to check there is nothing in input
+  let isEmpty = input == "" || input == null;
+  
+  //3.create another variables used in if-else
+  let unix_output = 0;
+  let utc_output  = "";
+  
+  if (isValidDate) {
+    unix_output = new Date(input);
+    utc_output  = unix_output.toUTCString();
+    // valueOf used for getting a variable back to primitive type
+    return res.json({unix : unix_output.valueOf(), utc : utc_output});
   }
-})
+  else if (isNaN(isValidDate) && isValidUnixNumber) {
+    unix_output = new Date(parseInt(input));
+    utc_output  = unix_output.toUTCString();
+    return res.json({unix : unix_output.valueOf(), utc : utc_output});
+  }
+  else if (isEmpty) {
+    unix_output = new Date();
+    utc_output  = unix_output.toUTCString();
+    return res.json({unix : unix_output.valueOf(), utc : utc_output});  
+  }
+  else {
+    res.json({error: "Invalid Date"});
+  }
+  
+});
 
 app.set('trust proxy', true);
 

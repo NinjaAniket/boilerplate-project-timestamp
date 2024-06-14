@@ -2,11 +2,25 @@
 // where your node app starts
 
 // init project
+require('dotenv').config();
 var express = require('express');
 var app = express();
-const bodyParser = require("bodyParser");
-app.use(bodyParser());
+const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
+
+app.use(bodyParser.urlencoded());
+app.use(bodyParser.json());
+
+const uri = process.env.MONGO_URI;
+
+if (!uri) {
+  throw new Error('MONGO_URI is not defined');
+}
+
+mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('Database connected successfully'))
+  .catch(err => console.error('Database connection error:', err));
+
 
 
 // enable CORS (https://en.wikipedia.org/wiki/Cross-origin_resource_sharing)
@@ -28,98 +42,13 @@ app.get("/api/hello", function (req, res) {
   res.json({greeting: 'hello APIsss'});
 });
 
-app.get('/api/:date?', (req, res) => {
-  let date = req.params.date;
-  //will return invalid if date is NaN
-  let isDateValid = Date.parse(date);
 
 
-  let unixTimestamp;
-  let utcTimestamp;
-
-  let isValidUnixNumber = /^[0-9]+$/.test(date)
-
-  if(isDateValid) {
-    unixTimestamp = new Date(date);
-    utcTimestamp = unixTimestamp.toUTCString();
-    res.json({unix: unixTimestamp.valueOf(), utc: utcTimestamp})
-  }else if(date == '' || date == null) {
-    res.json({unix: new Date().valueOf(), utc: new Date().toUTCString()})
-}
-else if (isNaN(isDateValid) && isValidUnixNumber) {
-  unixTimestamp = new Date(parseInt(date));
-  utcTimestamp  = unixTimestamp.toUTCString();
-  return res.json({unix : unixTimestamp.valueOf(), utc : utcTimestamp});
-}
- else {
-    res.json({error: "Invalid Date"})
-  }
-})
-
-app.set('trust proxy', true);
 
 
-app.get('/api/whoami', (req, res) => {
-  const ipaddress = req.ip;
-  const language = req.headers['accept-language'];
-  const software = req.headers['user-agent'];
-
-  let obj = {
-    ipaddress,
-    language,
-    software
-  };
-
-  res.json({obj})
 
 
-  
-});
-
-//api/shorturl
-
-app.post("/api/shorturl", (req,res) => {
-  const {url} = req.body;
-
-  //check url is valid
-
-  if(!url.includes("https://") && !url.includes("http://")) {
-    return res.json({error: "invalid url"})
-  }
-
-
-  const index = orignalUrl.indexOf(url);
-
-  if(index === -1) {
-    orignalUrl.push(url);
-    shortUrl.push(shortUrl.length);
-    return res.json({
-      original_url: url,
-      short_url: shortUrl.length - 1
-    })
-  }
-
-  return res.json({
-    orignal_url: url,
-    short_url: shortUrl[index]
-  })
-})
-
-app.get('/api/shorturl/:short_url', (req, res) => {
-  const url = parseInt(req.params.short_url);
-  const index = shortUrl.indexOf(url);
-  console.log(index, 'index');
-  if(index !== -1) {
-   return res.redirect(orignalUrl[index])
-  }
-  return res.json({
-    error: 'Request url not found'
-  })
-
-})
-
-
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+// mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
 const userSchema = new mongoose.Schema({
   username: {type: String}
 })
@@ -127,11 +56,21 @@ const userSchema = new mongoose.Schema({
 const exerciseSchema = new mongoose.Schema({
   description: {type: String},
   duration: {type: Number},
-  date: {type: Date, default: Date.now}
+  date: {type: Date, default: Date.now},
+  userName: String,
+  userId: String 
+})
+
+const logsSchema = new mongoose.Schema({
+  description: {type: String},
+  count: {type: Number},
+  log: [exerciseSchema]
+
 })
 
 const User = mongoose.model('User', userSchema);
-const Exercise = mongoose.model('Exercise', exerciseSchema)
+const Exercise = mongoose.model('Exercise', exerciseSchema);
+const Logs = mongoose.model('Logs', logsSchema)
 
 
 app.post('/api/users', async(req, res, next) => {
@@ -182,13 +121,14 @@ app.post('/api/users/:_id/exercises', async (req, res) => {
 app.get('/api/users/:_id/logs', async(req, res) => {
   const {_id} = req.params;
   //find exercise
-  const exercise = await Exercise.findById(_id);
+  const user = await User.findById(_id);
+  const exercise = await Exercise.find({_id});
 
   return res.json({
     _id: exercise._id,
-    description: exercise.description,
-    duration: exercise.duration,
-    date: exercise.date
+    username: user.username,
+    count: exercise.length,
+    log: exercise
   })
 })
 
